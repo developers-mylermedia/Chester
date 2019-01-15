@@ -29,6 +29,11 @@ public struct Argument {
       return "\(key): \(value)"
     }
   }
+  
+      public func buildMutation() -> String {
+        return QueryStringBuilder(self).buildMutation()
+    }
+
 
 }
 
@@ -151,6 +156,17 @@ private class QueryStringBuilder {
     queryString += "\n}"
     return queryString
   }
+  
+      fileprivate func buildMutation() -> String {
+        var queryString = "mutation {\n"
+        for (i, query) in queryBuilder.queries.enumerated() {
+            queryString += try query.buildMutation()
+            queryString += joinCollections(i)
+        }
+        queryString += "\n}"
+        return queryString
+    }
+
   
   fileprivate func joinCollections(_ current: Int) -> String {
     return current == queryBuilder.queries.count - 1 ? "" : ",\n"
