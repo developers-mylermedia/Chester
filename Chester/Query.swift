@@ -61,6 +61,12 @@ struct Query {
     return query
   }
   
+  func buildMutation(_ indent: Int = Query.indent) -> String {
+     var query = "\(" ".times(indent))\(from)\(buildArguments())"
+     return query
+  }
+
+  
   private func buildArguments() -> String {
     if arguments.isEmpty {
       return ""
