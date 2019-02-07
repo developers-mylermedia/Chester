@@ -29,12 +29,6 @@ public struct Argument {
       return "\(key): \(value)"
     }
   }
-  
-      public func buildMutation() -> String {
-        return QueryStringBuilder(self).buildMutation()
-    }
-
-
 }
 
 public final class QueryBuilder {
@@ -121,6 +115,12 @@ public final class QueryBuilder {
     return self
   }
   
+    /// Makes fields optional
+  public func fieldsRequired(_ value: Bool = true) -> Self {
+    queries[0].fieldsRequired = value
+    return self
+  }
+  
   /// Build the query.
   ///
   /// - Returns: The constructed query as String
@@ -128,6 +128,10 @@ public final class QueryBuilder {
   public func build() throws -> String {
     try validateQuery()
     return try QueryStringBuilder(self).build()
+  }
+  
+  public func buildMutation() -> String {
+    return QueryStringBuilder(self).buildMutation()
   }
 
   private func validateQuery() throws {
@@ -157,15 +161,15 @@ private class QueryStringBuilder {
     return queryString
   }
   
-      fileprivate func buildMutation() -> String {
-        var queryString = "mutation {\n"
-        for (i, query) in queryBuilder.queries.enumerated() {
-            queryString += try query.buildMutation()
-            queryString += joinCollections(i)
-        }
-        queryString += "\n}"
-        return queryString
+  fileprivate func buildMutation() -> String {
+    var queryString = "mutation {\n"
+    for (i, query) in queryBuilder.queries.enumerated() {
+        queryString += try query.buildMutation()
+        queryString += joinCollections(i)
     }
+    queryString += "\n}"
+    return queryString
+  }
 
   
   fileprivate func joinCollections(_ current: Int) -> String {
