@@ -50,20 +50,23 @@ struct Query {
     }
   }
 
-  func build(_ indent: Int = Query.indent) throws -> String {
-    var query = "\(" ".times(indent))\(from)\(buildArguments()) {\n"
-    if !on.isEmpty {
-      query += buildOn(indent + Query.indent)
-    } else {
-      query += buildFields(indent + Query.indent)
-    }
-    if !subQueries.isEmpty {
-      query += ",\n"
-      query += try buildSubQueries(indent + Query.indent) + "\n" + " ".times(indent) + "}"
-    } else {
-      query += "\n" + " ".times(indent) + "}"
-    }
-    return query
+    func build(_ indent: Int = Query.indent) throws -> String {
+        var query = "\(" ".times(indent))\(from)\(buildArguments())"
+        if fieldsRequired {
+            query += " {\n"
+        }
+        if !on.isEmpty {
+            query += buildOn(indent + Query.indent)
+        } else {
+            query += buildFields(indent + Query.indent)
+        }
+        if !subQueries.isEmpty {
+            query += ",\n"
+            query += try buildSubQueries(indent + Query.indent) + "\n" + " ".times(indent) + "}"
+        } else if fieldsRequired {
+          query += "\n" + " ".times(indent) + "}"
+      }
+      return query
   }
   
   func buildMutation(_ indent: Int = Query.indent) -> String {
