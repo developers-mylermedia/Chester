@@ -111,13 +111,19 @@ public final class QueryBuilder {
   
   /// Query for the meta field __typename
   public func withTypename() -> Self {
-    queries[0].withTypename = true
+    guard let lastIndex = queries.indices.last else {
+      throw QueryError.missingCollection
+    }
+    queries[lastIndex].withTypename = true
     return self
   }
   
     /// Makes fields optional
   public func fieldsRequired(_ value: Bool = true) -> Self {
-    queries[0].fieldsRequired = value
+    guard let lastIndex = queries.indices.last else {
+      throw QueryError.missingCollection
+    }
+    queries[lastIndex].fieldsRequired = value
     return self
   }
   
