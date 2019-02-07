@@ -14,6 +14,7 @@ struct Query {
   var on: [String]
   var subQueries: [Query]
   var withTypename = false
+  var fieldsRequired = true
 
   init(from: String) {
     self.from = from
@@ -40,12 +41,17 @@ struct Query {
   }
   
   func validate() throws {
+     if !fieldsRequired {
+       return
+     }
+    
     if fields.isEmpty && subQueries.isEmpty {
       throw QueryError.missingFields
     }
   }
 
-  func build(_ indent: Int = Query.indent) throws -> String {
+  func build(_ indent: Int = Query.indent, fieldsRequired: Bool = true) throws -> String {
+    self.fieldsRequired = fieldsRequired
     var query = "\(" ".times(indent))\(from)\(buildArguments()) {\n"
     if !on.isEmpty {
       query += buildOn(indent + Query.indent)
@@ -61,7 +67,7 @@ struct Query {
     return query
   }
   
-  func buildMutation(_ indent: Int = Query.indent) -> String {
+  func buildMutation(_ indent: Int = Query.indent, fieldsRequired: Bool = true) -> String {
      var query = "\(" ".times(indent))\(from)\(buildArguments())"
      return query
   }
