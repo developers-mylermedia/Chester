@@ -50,8 +50,7 @@ struct Query {
     }
   }
 
-  func build(_ indent: Int = Query.indent, fieldsRequired: Bool = true) throws -> String {
-    self.fieldsRequired = fieldsRequired
+  func build(_ indent: Int = Query.indent) throws -> String {
     var query = "\(" ".times(indent))\(from)\(buildArguments()) {\n"
     if !on.isEmpty {
       query += buildOn(indent + Query.indent)
@@ -67,7 +66,7 @@ struct Query {
     return query
   }
   
-  func buildMutation(_ indent: Int = Query.indent, fieldsRequired: Bool = true) -> String {
+  func buildMutation(_ indent: Int = Query.indent) -> String {
      var query = "\(" ".times(indent))\(from)\(buildArguments())"
      return query
   }
