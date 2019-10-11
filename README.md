@@ -7,18 +7,50 @@
 [![License](https://img.shields.io/cocoapods/l/Chester.svg?style=flat)](http://cocoapods.org/pods/Chester)
 [![Platform](https://img.shields.io/cocoapods/p/Chester.svg?style=flat)](http://cocoapods.org/pods/Chester)
 
-Note that Chester is work in progress and it's functionality is still very limited.
+## Experimental: @functionBuilder support
+
+`@functionBuilder` seems like a natural match for this kind of task. There's a separate `GraphQLBuilderTests` test suite that shows the supported cases. In it's basic form you can construct a query like this:
+
+```swift
+import Chester
+
+let query = GraphQLQuery {
+  From("posts")
+  Fields("id", "title")
+}
+```
+
+Nested queries can be defined in their logical order now:
+
+```swift
+let query = GraphQLQuery {
+  From("posts")
+  Fields("id", "title")
+  SubQuery {
+    From("comments")
+    Fields("body")
+    SubQuery {
+      From("author")
+      Fields("firstname")
+    }
+  }
+}
+```
+
+### Known Issues
+- Queries with multiple root fields and arguments produce a compiler error (e.g. `'Int' is not convertible to 'Any'`)
 
 ## Usage
 
 Chester uses the builder pattern to construct GraphQL queries. In its basic form use it like this:
+
 ```swift
 import Chester
 
 let query = QueryBuilder()
-	.from("posts")
-	.with(arguments: Argument(key: "id", value: "20"), Argument(key: "author", value: "Chester"))
-	.with(fields: "id", "title", "content")
+  .from("posts")
+  .with(arguments: Argument(key: "id", value: "20"), Argument(key: "author", value: "Chester"))
+  .with(fields: "id", "title", "content")
 
 // For cases with dynamic input, probably best to use a do-catch:
 
@@ -31,22 +63,22 @@ do {
 // Or if you're sure of your query
 
 guard let queryString = try? query.build else { return }
-
 ```
 
 You can add subqueries. Add as many as needed. You can nest them as well.
+
 ```swift
 let commentsQuery = QueryBuilder()
-	.from("comments")
-	.with(fields: "id", content)
+  .from("comments")
+  .with(fields: "id", content)
 let postsQuery = QueryBuilder()
-	.from("posts")
-	.with(fields: "id", "title")
-	.with(subQuery: commentsQuery)
-
+  .from("posts")
+  .with(fields: "id", "title")
+  .with(subQuery: commentsQuery)
 ```
 
 You can search on multiple collections at once
+
 ```swift
 let search = QueryBuilder()
   .from("search")
@@ -60,7 +92,8 @@ Check the included unit tests for further examples.
 
 ## Requirements
 
-* Swift 4
+* Swift 5
+* Xcode 10.2+
 * iOS 8
 
 ## Installation
@@ -68,15 +101,11 @@ Check the included unit tests for further examples.
 Chester is available through [CocoaPods](http://cocoapods.org). To install
 it, simply add the following line to your Podfile:
 
-```ruby
-pod "Chester"
-```
+    pod "Chester"
 
 Or [Carthage](https://github.com/Carthage/Carthage). Add Chester to your Cartfile:
 
-```
-github "JanGorman/Chester"
-```
+    github "JanGorman/Chester"
 
 ## Author
 

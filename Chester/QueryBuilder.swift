@@ -22,12 +22,14 @@ public struct Argument {
   }
 
   func build() -> String {
-    if let value = value as? GraphQLSerializable {
-      let escapedValue = value.asGraphQLString
-      return "\(key): \(escapedValue)"
-    } else {
-      return "\(key): \(value)"
+    if let value = value as? String, let escapable = GraphQLEscapedString(value) {
+      return "\(key): \(escapable)"
+    } else if let value = value as? [String: Any] {
+      return "\(GraphQLEscapedDictionary(value))"
+    } else if let value = value as? [Any] {
+      return "\(key): \(GraphQLEscapedArray(value))"
     }
+    return "\(key): \(value)"
   }
 }
 
@@ -74,6 +76,15 @@ public final class QueryBuilder {
     queries[lastIndex].with(arguments: arguments)
     return self
   }
+
+  @discardableResult
+  func with(rawArguments arguments: [String]) throws -> Self {
+    guard let lastIndex = queries.indices.last else {
+      throw QueryError.missingCollection
+    }
+    queries[lastIndex].with(rawArguments: arguments)
+    return self
+  }
   
   /// The fields to retrieve
   ///
@@ -81,6 +92,12 @@ public final class QueryBuilder {
   /// - Throws: `MissingCollection` if no collection is defined before passing in fields
   @discardableResult
   public func with(fields: String...) throws -> Self {
+    try with(fields: fields)
+    return self
+  }
+
+  @discardableResult
+  public func with(fields: [String]) throws -> Self {
     guard let lastIndex = queries.indices.last else {
       throw QueryError.missingCollection
     }
@@ -100,11 +117,26 @@ public final class QueryBuilder {
     queries[lastIndex].with(subQueries: query.queries)
     return self
   }
+
+  @discardableResult
+  func with(literalSubQuery query: String) throws -> Self {
+    guard let lastIndex = queries.indices.last else {
+      throw QueryError.missingCollection
+    }
+    queries[lastIndex].with(literalSubQueries: [query])
+    return self
+  }
   
   /// Query a number of collections for the same field
   ///
   /// - Parameter collections: The collection names
   public func on(collections: String...) -> Self {
+    queries[0].with(onCollections: collections)
+    return self
+  }
+
+  @discardableResult
+  func on(collections: [String]) -> Self {
     queries[0].with(onCollections: collections)
     return self
   }
@@ -151,47 +183,36 @@ public final class QueryBuilder {
 
 private class QueryStringBuilder {
   
-  fileprivate let queryBuilder: QueryBuilder
+  private let queryBuilder: QueryBuilder
   
   init(_ queryBuilder: QueryBuilder) {
     self.queryBuilder = queryBuilder
   }
   
-  fileprivate func build() throws -> String {
-    var queryString = "{\n"
-    for (i, query) in queryBuilder.queries.enumerated() {
-      queryString += try query.build()
-      queryString += joinCollections(i)
+  func build() throws -> String {
+    let count = queryBuilder.queries.count
+    let queryString = try queryBuilder.queries.enumerated().reduce(into: "{\n") { (result, arg1) in
+      let (i, query) = arg1
+      result += try query.build()
+      result += joinCollections(current: i, count: count)
     }
-    queryString += "\n}"
-    return queryString
+    return queryString + "\n}"
   }
-  
+
   fileprivate func buildMutation() -> String {
+    let count = queryBuilder.queries.count
     var queryString = "mutation {\n"
     for (i, query) in queryBuilder.queries.enumerated() {
         queryString += try query.buildMutation()
-        queryString += joinCollections(i)
+      queryString += joinCollections(current: i, count: count)
     }
     queryString += "\n}"
     return queryString
   }
 
-  
-  fileprivate func joinCollections(_ current: Int) -> String {
-    return current == queryBuilder.queries.count - 1 ? "" : ",\n"
+
+  private func joinCollections(current: Int, count: Int) -> String {
+    current == count - 1 ? "" : ",\n"
   }
 
-}
-
-extension String {
-  
-  func times(_ times: Int) -> String {
-    var result = ""
-    for _ in 0..<times {
-      result += self
-    }
-    return result
-  }
-  
 }
