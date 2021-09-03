@@ -22,10 +22,10 @@ public struct Argument {
   }
 
   func build() -> String {
-    if let value = value as? String, let escapable = GraphQLEscapedString(value) {
-      return "\(key): \(escapable)"
+    if let value = value as? String, let escaped = GraphQLEscapedString(value) {
+      return "\(key): \(escaped)"
     } else if let value = value as? [String: Any] {
-      return "\(GraphQLEscapedDictionary(value))"
+      return "\(key): \(GraphQLEscapedDictionary(value))"
     } else if let value = value as? [Any] {
       return "\(key): \(GraphQLEscapedArray(value))"
     }
@@ -58,7 +58,7 @@ public final class QueryBuilder {
       query.with(arguments: arguments)
     }
     if let subQueries = subQueries {
-      query.with(subQueries: subQueries.flatMap{ $0.queries })
+      query.with(subQueries: subQueries.flatMap(\.queries))
     }
     self.queries.append(query)
     return self
