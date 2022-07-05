@@ -70,7 +70,7 @@ struct Query {
     } else if !literalSubQueries.isEmpty {
       query += ",\n"
       query += "\(buildLiteralSubQueryes(indent))\n\(repeat: " ", indent)}"
-    } else {
+    } else if !fieldsRequired {
       query += "\n\(repeat: " ", indent)}"
     }
     return query
